@@ -22,8 +22,8 @@ namespace VRTri {
         virtual DeviceType GetDeviceType() override;
 
         virtual vr::EVRInitError Activate(uint32_t unObjectId) override;
-        //socket
-        virtual int Socket() override;
+
+        virtual int Socket();
         virtual void Deactivate() override;
         virtual void EnterStandby() override;
         virtual void* GetComponent(const char* pchComponentNameAndVersion) override;
@@ -36,6 +36,7 @@ namespace VRTri {
         vr::DriverPose_t last_pose_ = IVRDevice::MakeDefaultPose();
         //Private socket stuff
         int clientsocket;
+		int data;
         char buffer[1000];
         int serverSock = socket(AF_INET, SOCK_STREAM, 0);
         //Unused Haptics

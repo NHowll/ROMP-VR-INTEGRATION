@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <WinSock2.h>
+#include <Ws2tcpip.h>
 #define SERVER_PORT htons(8887)
 
 VRTri::TrackerDevice::TrackerDevice(std::string serial) :
@@ -42,7 +43,7 @@ void VRTri::TrackerDevice::Update()
     auto devices = GetDriver()->GetDevices();
     auto trckr = std::find_if(devices.begin(), devices.end(), [](const std::shared_ptr<IVRDevice>& device_ptr) {return device_ptr->GetDeviceType() == DeviceType::TRACKER; });
     //Pipeline
-    data = read(this->clientsocket, buffer, 500);
+    data = recv(this->clientsocket, buffer, 500, 0);
     //Process Inbound Data
 
     float finArr[9];
@@ -153,13 +154,13 @@ int VRTri::TrackerDevice::Socket()
     sockaddr_in clientAddr;
     socklen_t sin_size=sizeof(struct sockaddr_in);
     int clientSock=accept(serverSock,(struct sockaddr*)&clientAddr, &sin_size);
-    return(clientSock)
+	return(clientSock);
 }
 
 void VRTri::TrackerDevice::Deactivate()
 {
     this->device_index_ = vr::k_unTrackedDeviceIndexInvalid;
-    this->serverSock.close()
+	closesocket(serverSock);
 }
 
 void VRTri::TrackerDevice::EnterStandby()

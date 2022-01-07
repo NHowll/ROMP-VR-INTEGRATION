@@ -4,14 +4,14 @@ if sum(whether_set_yml)==0:
     default_webcam_configs_yml = "--configs_yml=configs/webcam.yml"
     print('No configs_yml is set, set it to the default {}'.format(default_webcam_configs_yml))
     sys.argv.append(default_webcam_configs_yml)
-from .base_predictor import *
-from .video import get_tracked_ids
+from romp.predict.base_predictor import *
+from romp.predict.video import get_tracked_ids
 if args().tracker == 'norfair':
-    from norfair import Detection, Tracker, Video, draw_tracked_objects
+    from norfair import Detection, Tracker
     import norfair
 else:
-    from tracking.tracker import Tracker
-from utils.temporal_optimization import create_OneEuroFilter, temporal_optimize_result
+    from romp.lib.tracking.tracker import Tracker
+from romp.lib.utils.temporal_optimization import create_OneEuroFilter, temporal_optimize_result
 
 class Webcam_processor(Predictor):
     def __init__(self, **kwargs):
@@ -26,21 +26,17 @@ class Webcam_processor(Predictor):
         '''
         24.4 FPS of forward prop. on 1070Ti
         '''
-        import keyboard
-        from utils.demo_utils import OpenCVCapture, Image_Reader 
+        from romp.lib.utils.demo_utils import OpenCVCapture
         capture = OpenCVCapture(video_file_path, show=False)
         print('Initialization is down')
         frame_id = 0
 
         if self.visulize_platform == 'integrated':
-            from visualization.open3d_visualizer import Open3d_visualizer
+            from romp.lib.visualization.open3d_visualizer import Open3d_visualizer
             visualizer = Open3d_visualizer(multi_mode=not args().show_largest_person_only)
-        elif self.visulize_platform == 'blender':
-            from visualization.socket_utils import SocketClient_blender
-            sender = SocketClient_blender()
-        elif self.visulize_platform == 'vis_server':
-            from visualization.socket_utils import Results_sender
-            RS = Results_sender()
+        elif self.visulize_platfom == 'vrOutput':
+            from romp.lib.visualization.socket_utils import SocketClient_vrOutput
+            sender = SocketClient_vrOutput()
 
         if self.make_tracking:
             if args().tracker == 'norfair':
@@ -124,38 +120,15 @@ class Webcam_processor(Predictor):
                 kp3ds = np.array([result['j3d_smpl24'] for result in results[frame_id]])
                 verts = np.array([result['verts'] for result in results[frame_id]])
                 
-                if self.visulize_platform == 'vis_server':
-                    RS.send_results(poses=poses, betas=betas, trans=trans, ids=tracked_ids)
-                elif self.visulize_platform == 'blender':
-                    sender.send([0,poses[0].tolist(),trans[0].tolist(),frame_id])
+                if self.visulize_platform == 'vrOutput':
+                    sender.send([verts[0].tolist(),frame_id])
                 elif self.visulize_platform == 'integrated':
                     if self.character == 'nvxia':
                         verts = self.character_model(poses)['verts'].numpy()
-                    if args().show_largest_person_only:
-                        trans_largest = trans[0] if self.add_trans else None
-                        # please make sure the (x, y, z) of visualized verts are all in range (-1, 1)
-                        # print(verts_largest.max(0), verts_largest.min(0))
-                        visualizer.run(verts[0], trans=trans_largest)
-                    else:
-                        visualizer.run_multiperson(verts, trans=trans, tracked_ids=tracked_ids)
-
-    def webcam_run_remote(self):
-        print('run on remote')
-        from utils.remote_server_utils import Server_port_receiver
-        capture = Server_port_receiver()
-
-        while True:
-            frame = capture.receive()
-            if isinstance(frame,list):
-                continue
-            with torch.no_grad():
-                outputs = self.single_image_forward(frame)
-            if outputs is not None:
-                verts = outputs['verts'][0].cpu().numpy()
-                verts = verts * 50 + np.array([0, 0, 100])
-                capture.send(verts)
-            else:
-                capture.send(['failed'])
+                    trans_largest = trans[0] if self.add_trans else None
+                    # please make sure the (x, y, z) of visualized verts are all in range (-1, 1)
+                    # print(verts_largest.max(0), verts_largest.min(0))
+                    visualizer.run(verts[0], trans=trans_largest)
 
 def euclidean_distance(detection, tracked_object):
     return np.linalg.norm(detection.points - tracked_object.estimate)
@@ -164,11 +137,8 @@ def main():
     with ConfigContext(parse_args(sys.argv[1:])) as args_set:
         print('Loading the configurations from {}'.format(args_set.configs_yml))
         processor = Webcam_processor(args_set=args_set)
-        print('Running the code on webcam demo')
-        if args_set.run_on_remote_server:
-            processor.webcam_run_remote()
-        else:
-            processor.webcam_run_local()
+        print('Running vr outputs')
+        processor.webcam_run_local()
 
 if __name__ == '__main__':
     main()
