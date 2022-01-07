@@ -1,6 +1,0 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets(1947,5): warning : The referenced project 'C:\Users\natha\Documents\Code\New\Simple-OpenVR-Driver-Tutorial-master\driver_example.vcxproj' does not exist.
-  Building Custom Rule C:/Users/natha/Documents/Code/New/Simple-OpenVR-Driver-Tutorial-master/CMakeLists.txt
-  CMake is re-running because C:/Users/natha/Documents/Code/New/Simple-OpenVR-Driver-Tutorial-master/CMakeFiles/generate.stamp dependency file is missing.
-CUSTOMBUILD : CMake error : The source directory "C:/Users/natha/Documents/Code/New/Simple-OpenVR-Driver-Tutorial-master" does not appear to contain CMakeLists.txt.
-  Specify --help for usage, or press the help button on the CMake GUI.
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppCommon.targets(240,5): error MSB8066: Custom build for 'CMakeLists.txt' exited with code 1.
