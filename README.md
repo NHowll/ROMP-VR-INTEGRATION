@@ -10,4 +10,5 @@ Tested on windows 10
 
 Comment these two lines out in base.py if you, like me, have major issues installing pytorch3d on windows
 > from visualization.visualization import Visualizer
+> 
 > self.visualizer = Visualizer(resolution=(512,512), result_img_dir=self.result_img_dir, with_renderer=True)
