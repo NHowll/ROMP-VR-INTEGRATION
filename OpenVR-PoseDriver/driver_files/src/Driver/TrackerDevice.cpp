@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <iostream>
+#include <WinSock2.h>
+#define SERVER_PORT htons(8887)
 
 VRTri::TrackerDevice::TrackerDevice(std::string serial) :
     serial_(serial)
@@ -39,12 +41,11 @@ void VRTri::TrackerDevice::Update()
     // Find a HMD
     auto devices = GetDriver()->GetDevices();
     auto trckr = std::find_if(devices.begin(), devices.end(), [](const std::shared_ptr<IVRDevice>& device_ptr) {return device_ptr->GetDeviceType() == DeviceType::TRACKER; });
-    float finArr[9];
-    float data;
     //Pipeline
-    std::cin >> data;
-    
+    data = read(this->clientsocket, buffer, 500);
+    //Process Inbound Data
 
+    float finArr[9];
     if (trckr != devices.end()) {
         //vr::DriverPose_t trckr_pose = (*trckr)->GetPose();
 
@@ -74,7 +75,7 @@ void VRTri::TrackerDevice::Update()
             pose.vecPosition[0] = trckr_position.x;
             pose.vecPosition[1] = trckr_position.y;
             pose.vecPosition[2] = trckr_position.z;
-            vr::VRDriverLog()->Log("Serial # Error");
+            vr::VRDriverLog()->Log("Socket Error : Pose stalled");
         }
 
         pose.qRotation.w = 0;
@@ -134,13 +135,31 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{posetracker}/icons/tracker_not_ready.png");
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{posetracker}/icons/tracker_not_ready.png");
     GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{posetracker}/icons/tracker_not_ready.png");
-
+    this->clientsocket = VRTri::TrackerDevice::Socket();
     return vr::EVRInitError::VRInitError_None;
+}
+
+int VRTri::TrackerDevice::Socket()
+{
+    sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = SERVER_PORT;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+    bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(struct sockaddr));
+
+    listen(serverSock,5);
+
+    sockaddr_in clientAddr;
+    socklen_t sin_size=sizeof(struct sockaddr_in);
+    int clientSock=accept(serverSock,(struct sockaddr*)&clientAddr, &sin_size);
+    return(clientSock)
 }
 
 void VRTri::TrackerDevice::Deactivate()
 {
     this->device_index_ = vr::k_unTrackedDeviceIndexInvalid;
+    this->serverSock.close()
 }
 
 void VRTri::TrackerDevice::EnterStandby()
