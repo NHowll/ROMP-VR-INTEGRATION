@@ -1,7 +1,7 @@
 import sys 
 whether_set_yml = ['configs_yml' in input_arg for input_arg in sys.argv]
 if sum(whether_set_yml)==0:
-    default_webcam_configs_yml = "--configs_yml=configs/webcam.yml"
+    default_webcam_configs_yml = "--configs_yml=configs/vrOutputs.yml"
     print('No configs_yml is set, set it to the default {}'.format(default_webcam_configs_yml))
     sys.argv.append(default_webcam_configs_yml)
 from romp.predict.base_predictor import *
@@ -34,7 +34,7 @@ class Webcam_processor(Predictor):
         if self.visulize_platform == 'integrated':
             from romp.lib.visualization.open3d_visualizer import Open3d_visualizer
             visualizer = Open3d_visualizer(multi_mode=not args().show_largest_person_only)
-        elif self.visulize_platfom == 'vrOutput':
+        elif self.visulize_platform == 'vrOutput':
             from romp.lib.visualization.socket_utils import SocketClient_vrOutput
             sender = SocketClient_vrOutput()
 
@@ -121,13 +121,19 @@ class Webcam_processor(Predictor):
                 verts = np.array([result['verts'] for result in results[frame_id]])
                 
                 if self.visulize_platform == 'vrOutput':
-                    sender.send([verts[0].tolist(),frame_id])
+                    kp3ds = kp3ds[0].tolist()
+                    print("sending")
+                    sender.send([kp3ds[2], kp3ds[0], kp3ds[5], frame_id])
                 elif self.visulize_platform == 'integrated':
                     if self.character == 'nvxia':
                         verts = self.character_model(poses)['verts'].numpy()
                     trans_largest = trans[0] if self.add_trans else None
                     # please make sure the (x, y, z) of visualized verts are all in range (-1, 1)
                     # print(verts_largest.max(0), verts_largest.min(0))
+                    kp3ds = kp3ds[0].tolist()
+                    print([kp3ds[2],frame_id])#Pelvis
+                    print([kp3ds[0],frame_id])#Right Ankle
+                    print([kp3ds[5],frame_id])#Left Ankle
                     visualizer.run(verts[0], trans=trans_largest)
 
 def euclidean_distance(detection, tracked_object):
