@@ -39,37 +39,52 @@ void VRTri::TrackerDevice::Update()
 
 	// Setup pose for this frame
 	auto pose = IVRDevice::MakeDefaultPose();
-
 	// Find a HMD
 	auto devices = GetDriver()->GetDevices();
 	auto trckr = std::find_if(devices.begin(), devices.end(), [](const std::shared_ptr<IVRDevice>& device_ptr) {return device_ptr->GetDeviceType() == DeviceType::TRACKER; });
 	//Pipeline
-	data = recv(this->clientsocket, buffer, 500, 0);
-	//Process Inbound Data
+	char* len_buffer = reinterpret_cast<char*>(&length_descriptor);
+	while (bytes_length_total < 4)
+	{
+		bytes_length_count = recv(clientsocket,
+			&len_buffer[bytes_length_total],
+			sizeof(uint32_t) - bytes_length_total,
+			0);
+		bytes_length_total += bytes_length_count;
+	}
+	size_t data_size = length_descriptor * sizeof(float);
+	std::vector<float> data(length_descriptor);
+	while (bytes_payload_total < static_cast<int>(data_size))
+	{
+		bytes_payload_count = recv(clientsocket,
+			&buffer[bytes_payload_total],
+			data_size - bytes_payload_total,
+			0);
 
-	float finArr[9];
+		bytes_payload_total += bytes_payload_count;
+	}
+	//int data = recv(this->clientsocket, buffer, 1000, 0);
+	//float rawdata[10];
+	//Process Inbound Data
 	if (trckr != devices.end()) {
 		//vr::DriverPose_t trckr_pose = (*trckr)->GetPose();
 
 		if (this->GetSerial() == "TrackerDevice1") { //hip  
-			linalg::vec<float, 3> trckr_position{ finArr[0], finArr[3], finArr[6] };
-			pose.vecPosition[0] = trckr_position[0];
-			pose.vecPosition[1] = trckr_position[1];
-			pose.vecPosition[2] = trckr_position[2];
+			pose.vecPosition[0] = data[0];
+			pose.vecPosition[1] = data[1];
+			pose.vecPosition[2] = data[2];
 			//vr::VRDriverLog()->Log("Updating Tracker 1");
 		}
 		else if (this->GetSerial() == "TrackerDevice2") { //right ankle
-			linalg::vec<float, 3> trckr_position{ finArr[1], finArr[4], finArr[7] };
-			pose.vecPosition[0] = trckr_position[0];
-			pose.vecPosition[1] = trckr_position[1];
-			pose.vecPosition[2] = trckr_position[2];
+			pose.vecPosition[0] = data[3];
+			pose.vecPosition[1] = data[4];
+			pose.vecPosition[2] = data[5];
 			//vr::VRDriverLog()->Log("Updating Tracker 2");
 		}
 		else if (this->GetSerial() == "TrackerDevice3") { //left ankle
-			linalg::vec<float, 3> trckr_position{ finArr[2], finArr[5], finArr[8] };
-			pose.vecPosition[0] = trckr_position[0];
-			pose.vecPosition[1] = trckr_position[1];
-			pose.vecPosition[2] = trckr_position[2];
+			pose.vecPosition[0] = data[6];
+			pose.vecPosition[1] = data[7];
+			pose.vecPosition[2] = data[8];
 			//vr::VRDriverLog()->Log("Updating Tracker 3");
 		}
 		else {

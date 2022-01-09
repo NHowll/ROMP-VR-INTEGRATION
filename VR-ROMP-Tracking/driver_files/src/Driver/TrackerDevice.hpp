@@ -35,7 +35,14 @@ namespace VRTri {
 		vr::TrackedDeviceIndex_t device_index_ = vr::k_unTrackedDeviceIndexInvalid;
 		std::string serial_;
 		vr::DriverPose_t last_pose_ = IVRDevice::MakeDefaultPose();
-		//Private socket stuff
+		//https://gist.github.com/mlaves/aabaeadd40cadadcd171a3b8f0bab3fa
+		int bytes_length_count = 0;
+		int bytes_length_total = 0;
+		int bytes_payload_count = 0;
+		int bytes_payload_total = 0;
+		uint32_t length_descriptor = 0;
+		char* len_buffer = reinterpret_cast<char*>(&length_descriptor);
+		//My socket stuff
 		int clientsocket;
 		int data;
 		char buffer[1000];
