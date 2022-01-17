@@ -34,6 +34,8 @@ namespace VRTri {
 		virtual void LeaveStandby() override;
 		virtual ~VRDriver() = default;
 
+		static int clientSock;
+
 	private:
 		std::vector<std::shared_ptr<IVRDevice>> devices_;
 		std::vector<vr::VREvent_t> openvr_events_;

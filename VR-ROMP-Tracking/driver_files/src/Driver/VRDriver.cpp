@@ -1,6 +1,10 @@
 #include "VRDriver.hpp"
 #include <Driver/TrackerDevice.hpp>
 
+#pragma comment(lib,"ws2_32.lib")
+#include <Ws2tcpip.h>
+#define SERVER_PORT htons(8887)
+
 vr::EVRInitError VRTri::VRDriver::Init(vr::IVRDriverContext* pDriverContext)
 {
 	// Perform driver context initialisation
@@ -9,13 +13,24 @@ vr::EVRInitError VRTri::VRDriver::Init(vr::IVRDriverContext* pDriverContext)
 	}
 
 	Log("Activating VRomp...");
-
+	char buffer[1000];
+	int serverSock = socket(AF_INET, SOCK_STREAM, 0);
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = SERVER_PORT;
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(struct sockaddr));
+	listen(serverSock, 5);
+	sockaddr_in clientAddr;
+	socklen_t sin_size = sizeof(struct sockaddr_in);
+	clientSock = accept(serverSock, (struct sockaddr*)&clientAddr, &sin_size);
+	GetDriver()->Log("Finished Socket Setup");
 	// Add a tracker
+
 	this->AddDevice(std::make_shared<TrackerDevice>("TrackerDevice1"));
 	this->AddDevice(std::make_shared<TrackerDevice>("TrackerDevice2"));
 	this->AddDevice(std::make_shared<TrackerDevice>("TrackerDevice3"));
-
-
+	
 	Log("VRomp Loaded Successfully");
 
 	return vr::VRInitError_None;

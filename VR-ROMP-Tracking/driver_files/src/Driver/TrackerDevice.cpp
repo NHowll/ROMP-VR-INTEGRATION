@@ -1,4 +1,5 @@
 #include "TrackerDevice.hpp"
+#include "VRDriver.hpp"
 #define WIN32_LEAN_AND_MEAN
 // Windows Header Files:
 #include <windows.h>
@@ -43,6 +44,7 @@ void VRTri::TrackerDevice::Update()
 	auto devices = GetDriver()->GetDevices();
 	auto trckr = std::find_if(devices.begin(), devices.end(), [](const std::shared_ptr<IVRDevice>& device_ptr) {return device_ptr->GetDeviceType() == DeviceType::TRACKER; });
 	//Pipeline
+	int clientsocket =  VRTri::VRDriver::clientSock;
 	char* len_buffer = reinterpret_cast<char*>(&length_descriptor);
 	while (bytes_length_total < 4)
 	{
@@ -152,30 +154,12 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{posetracker}/icons/tracker_not_ready.png");
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{posetracker}/icons/tracker_not_ready.png");
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{posetracker}/icons/tracker_not_ready.png");
-	this->clientsocket = VRTri::TrackerDevice::Socket();
 	return vr::EVRInitError::VRInitError_None;
-}
-
-int VRTri::TrackerDevice::Socket()
-{
-	sockaddr_in serverAddr;
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = SERVER_PORT;
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
-	bind(serverSock, (struct sockaddr*)&serverAddr, sizeof(struct sockaddr));
-
-	listen(serverSock, 5);
-
-	sockaddr_in clientAddr;
-	socklen_t sin_size = sizeof(struct sockaddr_in);
-	int clientSock = accept(serverSock, (struct sockaddr*)&clientAddr, &sin_size);
-	return(clientSock);
 }
 
 void VRTri::TrackerDevice::Deactivate()
 {
 	this->device_index_ = vr::k_unTrackedDeviceIndexInvalid;
-	closesocket(serverSock);
 }
 
 void VRTri::TrackerDevice::EnterStandby()
