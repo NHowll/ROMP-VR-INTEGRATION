@@ -5,10 +5,10 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <iostream>
-#include <WinSock2.h>
-#pragma comment(lib,"ws2_32.lib")
-#include <Ws2tcpip.h>
-#define SERVER_PORT htons(8887)
+#include<stdio.h>
+
+#include <fstream>
+#include <string>
 
 VRTri::TrackerDevice::TrackerDevice(std::string serial) :
 	serial_(serial)
@@ -43,30 +43,20 @@ void VRTri::TrackerDevice::Update()
 	// Find a HMD
 	auto devices = GetDriver()->GetDevices();
 	auto trckr = std::find_if(devices.begin(), devices.end(), [](const std::shared_ptr<IVRDevice>& device_ptr) {return device_ptr->GetDeviceType() == DeviceType::TRACKER; });
-	//Pipeline
-	int clientsocket =  VRTri::VRDriver::clientSock;
-	char* len_buffer = reinterpret_cast<char*>(&length_descriptor);
-	while (bytes_length_total < 4)
-	{
-		bytes_length_count = recv(clientsocket,
-			&len_buffer[bytes_length_total],
-			sizeof(uint32_t) - bytes_length_total,
-			0);
-		bytes_length_total += bytes_length_count;
+	//IO
+	std::string rawdata;
+	std::ifstream dataFile;
+	std::vector<double> data;
+	dataFile.open ("C:\temp\File.txt");
+	int i = 1;
+	while(i<=8) {
+		std::getline(dataFile,rawdata);
+		data.push_back(std::stod(rawdata));
+		i++;
 	}
-	size_t data_size = length_descriptor * sizeof(float);
-	std::vector<float> data(length_descriptor);
-	while (bytes_payload_total < static_cast<int>(data_size))
-	{
-		bytes_payload_count = recv(clientsocket,
-			&buffer[bytes_payload_total],
-			data_size - bytes_payload_total,
-			0);
-
-		bytes_payload_total += bytes_payload_count;
-	}
-	//int data = recv(this->clientsocket, buffer, 1000, 0);
-	//float rawdata[10];
+	dataFile.close();
+	//'C:\temp\File.txt'
+	//order = [pelvis],[right_ankle],[left_ankle],frame_id
 	//Process Inbound Data
 	if (trckr != devices.end()) {
 		//vr::DriverPose_t trckr_pose = (*trckr)->GetPose();
@@ -125,6 +115,8 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
 	this->device_index_ = unObjectId;
 
 	GetDriver()->Log("Activating tracker " + this->serial_);
+	//Establish Pipe
+	GetDriver()->Log("Establishing I/O..." + this->serial_);
 
 	// Get the properties handle
 	auto props = GetDriver()->GetProperties()->TrackedDeviceToPropertyContainer(this->device_index_);

@@ -5,9 +5,7 @@
 #include <linalg.h>
 #include <Driver/IVRDevice.hpp>
 #include <Native/DriverFactory.hpp>
-//Socket
-#include<WinSock2.h>
-#pragma comment(lib,"ws2_32.lib")
+#include<iostream>
 
 namespace VRTri {
 	class TrackerDevice : public IVRDevice {
@@ -35,13 +33,7 @@ namespace VRTri {
 		std::string serial_;
 		vr::DriverPose_t last_pose_ = IVRDevice::MakeDefaultPose();
 
-		int bytes_length_count = 0;
-		int bytes_length_total = 0;
-		int bytes_payload_count = 0;
-		int bytes_payload_total = 0;
-		uint32_t length_descriptor = 0;
-		char buffer[1000];
-		//int clientsocket;
+
 		//Unused Haptics
 		bool did_vibrate_ = false;
 		float vibrate_anim_state_ = 0.f;

@@ -29,7 +29,6 @@ class Webcam_processor(Predictor):
         from romp.lib.utils.demo_utils import OpenCVCapture
         capture = OpenCVCapture(video_file_path, show=False)
         print('Initialization is down')
-        frame_id = 0
 
         if self.visulize_platform == 'integrated':
             from romp.lib.visualization.open3d_visualizer import Open3d_visualizer
@@ -122,8 +121,14 @@ class Webcam_processor(Predictor):
                 
                 if self.visulize_platform == 'vrOutput':
                     kp3ds = kp3ds[0].tolist()
-                    print("sending")
-                    sender.send([kp3ds[2], kp3ds[0], kp3ds[5], frame_id])
+                    #print("sending")
+                    #sender.send([kp3ds[2], kp3ds[0], kp3ds[5], frame_id])
+                    #IO
+                    fileTime = time.time()
+                    open("C:\temp\File.txt", "wb").write([kp3ds[2,0],"\n",kp3ds[2,1],"\n",kp3ds[2,2],"\n",kp3ds[0,0],"\n",kp3ds[0,1],"\n",kp3ds[0,2],"\n",kp3ds[5,0],"\n",kp3ds[5,1],"\n",kp3ds[5,2],"\n",frame_id])
+                    fileDuration = time.time() - fileTime
+                    print("File Write Duration: %.2f s." % fileDuration)
+                    #
                 elif self.visulize_platform == 'integrated':
                     if self.character == 'nvxia':
                         verts = self.character_model(poses)['verts'].numpy()
