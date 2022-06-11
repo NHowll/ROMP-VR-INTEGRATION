@@ -1,14 +1,11 @@
 #include "TrackerDevice.hpp"
 #include "VRDriver.hpp"
+#include <iostream>
+#include <fstream>
+#include <string>
 #define WIN32_LEAN_AND_MEAN
 // Windows Header Files:
 #include <windows.h>
-#include <stdlib.h>
-#include <iostream>
-#include<stdio.h>
-
-#include <fstream>
-#include <string>
 
 VRTri::TrackerDevice::TrackerDevice(std::string serial) :
 	serial_(serial)
@@ -22,6 +19,7 @@ std::string VRTri::TrackerDevice::GetSerial()
 
 void VRTri::TrackerDevice::Update()
 {
+	//vr::VRDriverLog()->Log("Updating!");
 	if (this->device_index_ == vr::k_unTrackedDeviceIndexInvalid)
 		return;
 
@@ -44,18 +42,31 @@ void VRTri::TrackerDevice::Update()
 	auto devices = GetDriver()->GetDevices();
 	auto trckr = std::find_if(devices.begin(), devices.end(), [](const std::shared_ptr<IVRDevice>& device_ptr) {return device_ptr->GetDeviceType() == DeviceType::TRACKER; });
 	//IO
+	//vr::VRDriverLog()->Log("GOT TO I/O");
 	std::string rawdata;
 	std::ifstream dataFile;
 	std::vector<double> data;
-	dataFile.open ("C:\temp\File.txt");
-	int i = 1;
-	while(i<=8) {
-		std::getline(dataFile,rawdata);
-		data.push_back(std::stod(rawdata));
-		i++;
+	try
+	{
+		dataFile.open("C:/temp/File.txt");
+		int i = 1;
+		data.clear();
+		while (i <= 8) {
+			std::getline(dataFile, rawdata);
+			//vr::VRDriverLog()->Log("GOT LINE DATA: "+ i);
+			data.push_back(std::stod(rawdata));
+			i++;
+		}
+		dataFile.close();
 	}
-	dataFile.close();
-	//'C:\temp\File.txt'
+	catch (const std::exception&)
+	{
+		vr::VRDriverLog()->Log("Caught File Exception");
+		
+	}
+
+	//vr::VRDriverLog()->Log("FILE OPENED");
+	//vr::VRDriverLog()->Log("FILE CLOSED");
 	//order = [pelvis],[right_ankle],[left_ankle],frame_id
 	//Process Inbound Data
 	if (trckr != devices.end()) {
@@ -84,7 +95,7 @@ void VRTri::TrackerDevice::Update()
 			pose.vecPosition[0] = trckr_position.x;
 			pose.vecPosition[1] = trckr_position.y;
 			pose.vecPosition[2] = trckr_position.z;
-			vr::VRDriverLog()->Log("Socket Error : Pose stalled");
+			vr::VRDriverLog()->Log("Error : Pose stalled");
 		}
 
 		pose.qRotation.w = 0;
@@ -99,7 +110,7 @@ void VRTri::TrackerDevice::Update()
 	GetDriver()->GetDriverHost()->TrackedDevicePoseUpdated(this->device_index_, pose, sizeof(vr::DriverPose_t));
 	this->last_pose_ = pose;
 }
-
+//
 DeviceType VRTri::TrackerDevice::GetDeviceType()
 {
 	return DeviceType::TRACKER;
@@ -115,8 +126,6 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
 	this->device_index_ = unObjectId;
 
 	GetDriver()->Log("Activating tracker " + this->serial_);
-	//Establish Pipe
-	GetDriver()->Log("Establishing I/O..." + this->serial_);
 
 	// Get the properties handle
 	auto props = GetDriver()->GetProperties()->TrackedDeviceToPropertyContainer(this->device_index_);
@@ -125,7 +134,7 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
 	GetDriver()->GetProperties()->SetUint64Property(props, vr::Prop_CurrentUniverseId_Uint64, 2);
 
 	// Set up a model "number" (not needed but good to have)
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "Posetracker");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_ModelNumber_String, "VRomp");
 
 	// Opt out of hand selection
 	GetDriver()->GetProperties()->SetInt32Property(props, vr::Prop_ControllerRoleHint_Int32, vr::ETrackedControllerRole::TrackedControllerRole_OptOut);
@@ -134,18 +143,18 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_RenderModelName_String, "vr_controller_05_wireless_b");
 
 	// Set controller profile
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{PoseTracker}/input/posetracker_tracker_bindings.json");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_InputProfilePath_String, "{VRomp}/input/VRomp_tracker_bindings.json");
 
 	// Set the icon
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{posetracker}/icons/tracker_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReady_String, "{VRomp}/icons/tracker_ready.png");
 
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceOff_String, "{posetracker}/icons/tracker_not_ready.png");
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearching_String, "{posetracker}/icons/tracker_not_ready.png");
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{posetracker}/icons/tracker_not_ready.png");
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{posetracker}/icons/tracker_not_ready.png");
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{posetracker}/icons/tracker_not_ready.png");
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{posetracker}/icons/tracker_not_ready.png");
-	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{posetracker}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceOff_String, "{VRomp}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearching_String, "{VRomp}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceSearchingAlert_String, "{VRomp}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceReadyAlert_String, "{VRomp}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{VRomp}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{VRomp}/icons/tracker_not_ready.png");
+	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{VRomp}/icons/tracker_not_ready.png");
 	return vr::EVRInitError::VRInitError_None;
 }
 

@@ -1,10 +1,6 @@
 #include "VRDriver.hpp"
 #include <Driver/TrackerDevice.hpp>
 
-#pragma comment(lib,"ws2_32.lib")
-#include <Ws2tcpip.h>
-#define SERVER_PORT htons(8887)
-
 vr::EVRInitError VRTri::VRDriver::Init(vr::IVRDriverContext* pDriverContext)
 {
 	// Perform driver context initialisation

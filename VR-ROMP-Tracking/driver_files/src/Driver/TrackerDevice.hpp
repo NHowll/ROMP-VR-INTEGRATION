@@ -33,7 +33,6 @@ namespace VRTri {
 		std::string serial_;
 		vr::DriverPose_t last_pose_ = IVRDevice::MakeDefaultPose();
 
-
 		//Unused Haptics
 		bool did_vibrate_ = false;
 		float vibrate_anim_state_ = 0.f;
