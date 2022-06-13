@@ -51,20 +51,28 @@ void VRTri::TrackerDevice::Update()
 		dataFile.open("C:/temp/File.txt");
 		int i = 0;
 		data.clear();
-		while (i < 9) {
+		while (i < 8) {
 			std::getline(dataFile, rawdata);
 			//vr::VRDriverLog()->Log("GOT LINE DATA: "+ i);
-			data.push_back(std::stod(rawdata));
+			if (!rawdata.empty())
+				data.push_back(std::stod(rawdata));
 			i++;
 		}
 		dataFile.close();
 	}
-	catch (const std::exception&)
+	//Known Exceptions
+	//vrserver - VRomp : Caught File Exception []
+	//vrserver - Exception c0000005 []
+	//vrserver - VRomp : invalid stod argument []
+
+	catch (const std::exception &exc)
 	{
 		vr::VRDriverLog()->Log("Caught File Exception");
+		vr::VRDriverLog()->Log(exc.what());
 		dataFile.close();
 	}
-	int multConst = 3.28084;
+	//int multConst = -3.28084;
+	int multConst = -1;
 	//order = [pelvis],[right_ankle],[left_ankle],frame_id
 	//Process Inbound Data
 	if (trckr != devices.end()) {
