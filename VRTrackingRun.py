@@ -29,13 +29,12 @@ class Webcam_processor(Predictor):
         from romp.lib.utils.demo_utils import OpenCVCapture
         capture = OpenCVCapture(video_file_path, show=False)
         print('Initialization is down')
-
+        frame_id = 0
         if self.visulize_platform == 'integrated':
             from romp.lib.visualization.open3d_visualizer import Open3d_visualizer
             visualizer = Open3d_visualizer(multi_mode=not args().show_largest_person_only)
         elif self.visulize_platform == 'vrOutput':
-            from romp.lib.visualization.socket_utils import SocketClient_vrOutput
-            sender = SocketClient_vrOutput()
+            print("going")
 
         if self.make_tracking:
             if args().tracker == 'norfair':
@@ -124,10 +123,10 @@ class Webcam_processor(Predictor):
                     #print("sending")
                     #sender.send([kp3ds[2], kp3ds[0], kp3ds[5], frame_id])
                     #IO
-                    fileTime = time.time()
-                    open("C:\temp\File.txt", "wb").write([kp3ds[2,0],"\n",kp3ds[2,1],"\n",kp3ds[2,2],"\n",kp3ds[0,0],"\n",kp3ds[0,1],"\n",kp3ds[0,2],"\n",kp3ds[5,0],"\n",kp3ds[5,1],"\n",kp3ds[5,2],"\n",frame_id])
-                    fileDuration = time.time() - fileTime
-                    print("File Write Duration: %.2f s." % fileDuration)
+                    #fileTime = time.time()
+                    open("C:/temp/File.txt", "w").write(str((kp3ds[0])[0])+"\n"+str((kp3ds[0])[1])+"\n"+str((kp3ds[0])[2])+"\n"+str((kp3ds[8])[0])+"\n"+str((kp3ds[8])[1])+"\n"+str((kp3ds[8])[2])+"\n"+str((kp3ds[7])[0])+"\n"+str((kp3ds[7])[1])+"\n"+str((kp3ds[7])[2])+"\n"+str(frame_id))
+                    #fileDuration = time.time() - fileTime
+                    #print("File Write Duration: %.2f s." % fileDuration)
                     #
                 elif self.visulize_platform == 'integrated':
                     if self.character == 'nvxia':
@@ -136,9 +135,9 @@ class Webcam_processor(Predictor):
                     # please make sure the (x, y, z) of visualized verts are all in range (-1, 1)
                     # print(verts_largest.max(0), verts_largest.min(0))
                     kp3ds = kp3ds[0].tolist()
-                    print([kp3ds[2],frame_id])#Pelvis
-                    print([kp3ds[0],frame_id])#Right Ankle
-                    print([kp3ds[5],frame_id])#Left Ankle
+                    print([kp3ds[0],frame_id])#Pelvis
+                    print([kp3ds[8],frame_id])#Right Ankle
+                    print([kp3ds[7],frame_id])#Left Ankle
                     visualizer.run(verts[0], trans=trans_largest)
 
 def euclidean_distance(detection, tracked_object):

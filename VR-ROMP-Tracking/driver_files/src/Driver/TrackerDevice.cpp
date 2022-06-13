@@ -49,9 +49,9 @@ void VRTri::TrackerDevice::Update()
 	try
 	{
 		dataFile.open("C:/temp/File.txt");
-		int i = 1;
+		int i = 0;
 		data.clear();
-		while (i <= 8) {
+		while (i < 9) {
 			std::getline(dataFile, rawdata);
 			//vr::VRDriverLog()->Log("GOT LINE DATA: "+ i);
 			data.push_back(std::stod(rawdata));
@@ -62,32 +62,30 @@ void VRTri::TrackerDevice::Update()
 	catch (const std::exception&)
 	{
 		vr::VRDriverLog()->Log("Caught File Exception");
-		
+		dataFile.close();
 	}
-
-	//vr::VRDriverLog()->Log("FILE OPENED");
-	//vr::VRDriverLog()->Log("FILE CLOSED");
+	int multConst = 3.28084;
 	//order = [pelvis],[right_ankle],[left_ankle],frame_id
 	//Process Inbound Data
 	if (trckr != devices.end()) {
 		//vr::DriverPose_t trckr_pose = (*trckr)->GetPose();
 
 		if (this->GetSerial() == "TrackerDevice1") { //hip  
-			pose.vecPosition[0] = data[0];
-			pose.vecPosition[1] = data[1];
-			pose.vecPosition[2] = data[2];
+			pose.vecPosition[0] = (data[0] * multConst);
+			pose.vecPosition[1] = (data[1] * multConst);
+			pose.vecPosition[2] = (data[2] * multConst);
 			//vr::VRDriverLog()->Log("Updating Tracker 1");
 		}
 		else if (this->GetSerial() == "TrackerDevice2") { //right ankle
-			pose.vecPosition[0] = data[3];
-			pose.vecPosition[1] = data[4];
-			pose.vecPosition[2] = data[5];
+			pose.vecPosition[0] = (data[3] * multConst);
+			pose.vecPosition[1] = (data[4] * multConst);
+			pose.vecPosition[2] = (data[5] * multConst);
 			//vr::VRDriverLog()->Log("Updating Tracker 2");
 		}
 		else if (this->GetSerial() == "TrackerDevice3") { //left ankle
-			pose.vecPosition[0] = data[6];
-			pose.vecPosition[1] = data[7];
-			pose.vecPosition[2] = data[8];
+			pose.vecPosition[0] = (data[6] * multConst);
+			pose.vecPosition[1] = (data[7] * multConst);
+			pose.vecPosition[2] = (data[8] * multConst);
 			//vr::VRDriverLog()->Log("Updating Tracker 3");
 		}
 		else {
