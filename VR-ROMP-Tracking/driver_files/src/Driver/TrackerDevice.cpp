@@ -6,6 +6,7 @@
 #define WIN32_LEAN_AND_MEAN
 // Windows Header Files:
 #include <windows.h>
+#include <python.h>
 
 VRTri::TrackerDevice::TrackerDevice(std::string serial) :
 	serial_(serial)
@@ -188,6 +189,8 @@ vr::EVRInitError VRTri::TrackerDevice::Activate(uint32_t unObjectId)
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceNotReady_String, "{VRomp}/icons/tracker_not_ready.png");
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceStandby_String, "{VRomp}/icons/tracker_not_ready.png");
 	GetDriver()->GetProperties()->SetStringProperty(props, vr::Prop_NamedIconPathDeviceAlertLow_String, "{VRomp}/icons/tracker_not_ready.png");
+
+
 	return vr::EVRInitError::VRInitError_None;
 }
 
