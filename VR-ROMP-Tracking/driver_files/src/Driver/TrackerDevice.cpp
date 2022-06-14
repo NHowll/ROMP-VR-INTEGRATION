@@ -50,7 +50,7 @@ void VRTri::TrackerDevice::Update()
 	fallbackData = data;
 	try
 	{
-		dataFile.open("C:/temp/File.txt");
+		dataFile.open("C:/temp/File");
 		if (!dataFile.is_open())
 		{
 			vr::VRDriverLog()->Log("File Unable to open");
@@ -69,8 +69,8 @@ void VRTri::TrackerDevice::Update()
 	}
 	//Known Exceptions
 	//vrserver - VRomp : Caught File Exception [Fixed?]
-	//vrserver - Exception c0000005 []
-	//vrserver - VRomp : invalid stod argument [Fixed?]
+	//vrserver - Exception c0000005 [????]
+	//vrserver - VRomp : invalid stod argument [Fixed]
 
 	catch (const std::exception &exc)
 	{
