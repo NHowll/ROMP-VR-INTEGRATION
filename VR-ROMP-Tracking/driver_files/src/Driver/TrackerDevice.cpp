@@ -45,13 +45,20 @@ void VRTri::TrackerDevice::Update()
 	//vr::VRDriverLog()->Log("GOT TO I/O");
 	std::string rawdata;
 	std::ifstream dataFile;
+	std::vector<double> fallbackData;
 	std::vector<double> data;
+	fallbackData = data;
 	try
 	{
 		dataFile.open("C:/temp/File.txt");
+		if (!dataFile.is_open())
+		{
+			vr::VRDriverLog()->Log("File Unable to open");
+			return;
+		}
 		int i = 0;
 		data.clear();
-		while (i < 8) {
+		while (i < 19) {
 			std::getline(dataFile, rawdata);
 			//vr::VRDriverLog()->Log("GOT LINE DATA: "+ i);
 			if (!rawdata.empty())
@@ -61,53 +68,73 @@ void VRTri::TrackerDevice::Update()
 		dataFile.close();
 	}
 	//Known Exceptions
-	//vrserver - VRomp : Caught File Exception []
+	//vrserver - VRomp : Caught File Exception [Fixed?]
 	//vrserver - Exception c0000005 []
-	//vrserver - VRomp : invalid stod argument []
+	//vrserver - VRomp : invalid stod argument [Fixed?]
 
 	catch (const std::exception &exc)
 	{
 		vr::VRDriverLog()->Log("Caught File Exception");
 		vr::VRDriverLog()->Log(exc.what());
 		dataFile.close();
+		data = fallbackData;
+
 	}
 	//int multConst = -3.28084;
 	int multConst = -1;
+	//OFFSETS
+	//Tracker1
+	double t1xoff = 0;
+	double t1yoff = .65;
+	double t1zoff = 0;
+	//Tracker2
+	double t2xoff = 0;
+	double t2yoff = .65;
+	double t2zoff = 0;
+	//Tracker3
+	double t3xoff = 0;
+	double t3yoff = .65;
+	double t3zoff = 0;
+	//
 	//order = [pelvis],[right_ankle],[left_ankle],frame_id
 	//Process Inbound Data
 	if (trckr != devices.end()) {
 		//vr::DriverPose_t trckr_pose = (*trckr)->GetPose();
 
 		if (this->GetSerial() == "TrackerDevice1") { //hip  
-			pose.vecPosition[0] = (data[0] * multConst);
-			pose.vecPosition[1] = (data[1] * multConst);
-			pose.vecPosition[2] = (data[2] * multConst);
+			pose.vecPosition[0] = (data[0] * multConst)+t1xoff;
+			pose.vecPosition[1] = (data[1] * multConst)+t1yoff;
+			pose.vecPosition[2] = (data[2] * multConst)+t1zoff;
+			pose.qRotation.w = 0;
+			pose.qRotation.x = data[9];
+			pose.qRotation.y = 0;//data[10];
+			pose.qRotation.z = data[11];
 			//vr::VRDriverLog()->Log("Updating Tracker 1");
 		}
 		else if (this->GetSerial() == "TrackerDevice2") { //right ankle
-			pose.vecPosition[0] = (data[3] * multConst);
-			pose.vecPosition[1] = (data[4] * multConst);
-			pose.vecPosition[2] = (data[5] * multConst);
+			pose.vecPosition[0] = (data[3] * multConst)+t2xoff;
+			pose.vecPosition[1] = (data[4] * multConst)+t2yoff;
+			pose.vecPosition[2] = (data[5] * multConst)+t2zoff;
+			pose.qRotation.w = 0;
+			pose.qRotation.x = data[12];
+			pose.qRotation.y = data[13];
+			pose.qRotation.z = data[14];
 			//vr::VRDriverLog()->Log("Updating Tracker 2");
 		}
 		else if (this->GetSerial() == "TrackerDevice3") { //left ankle
-			pose.vecPosition[0] = (data[6] * multConst);
-			pose.vecPosition[1] = (data[7] * multConst);
-			pose.vecPosition[2] = (data[8] * multConst);
+			pose.vecPosition[0] = (data[6] * multConst)+t3xoff;
+			pose.vecPosition[1] = (data[7] * multConst)+t3yoff;
+			pose.vecPosition[2] = (data[8] * multConst)+t3zoff;
+			pose.qRotation.w = 0;
+			pose.qRotation.x = data[15];
+			pose.qRotation.y = data[16];
+			pose.qRotation.z = data[17];
 			//vr::VRDriverLog()->Log("Updating Tracker 3");
 		}
 		else {
-			linalg::vec<float, 3> trckr_position{ (1, 1, 1) };
-			pose.vecPosition[0] = trckr_position.x;
-			pose.vecPosition[1] = trckr_position.y;
-			pose.vecPosition[2] = trckr_position.z;
+			pose = this->last_pose_;
 			vr::VRDriverLog()->Log("Error : Pose stalled");
 		}
-
-		pose.qRotation.w = 0;
-		pose.qRotation.x = 0;
-		pose.qRotation.y = 0;
-		pose.qRotation.z = 0;
 	}
 	else {
 		vr::VRDriverLog()->Log("devices.end Error");
